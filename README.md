@@ -1,4 +1,4 @@
-# amongus_lock
+# No Impostors
 
 A new Flutter project.
 
