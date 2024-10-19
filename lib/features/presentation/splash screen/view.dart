@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:math' as math;
 
 import 'package:amongus_lock/core/constants/shared_pref_strings.dart';
@@ -157,7 +156,6 @@ class _SplashScreenState extends State<SplashScreen>
             AnimatedBuilder(
                 animation: _initAnimations[2],
                 builder: (context, _) {
-                  log('${_initAnimationController.value < 0.5 ? _initAnimations[0].value : _initAnimations[2].value}');
 
                   return AnimatedBuilder(
                       animation: _initAnimations[0],
