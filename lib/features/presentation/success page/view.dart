@@ -1,13 +1,17 @@
+import 'dart:developer';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:amongus_lock/core/states/passkey_state.dart';
 import 'package:amongus_lock/core/widgets/common.dart';
 import 'package:amongus_lock/features/presentation/splash%20screen/view.dart';
 import 'package:amongus_lock/init_dependencies.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soundpool/soundpool.dart';
 
 class SuccessPage extends StatefulWidget {
   const SuccessPage({super.key});
@@ -21,9 +25,17 @@ class _SuccessPageState extends State<SuccessPage>
   late AnimationController lockAnimationController;
   List<Animation> lockAnimations = [];
 
+  late Soundpool soundPool;
+  late int dialerSoundId;
+  late int lockSoundId;
+
+  bool isDialSoundPlaying = false;
+  bool isLockSoundPlaying = false;
+
   @override
   void initState() {
-    
+    soundPool = serviceLocator();
+
     lockAnimationController =
         AnimationController(vsync: this, duration: const Duration(seconds: 3));
 
@@ -39,10 +51,43 @@ class _SuccessPageState extends State<SuccessPage>
         parent: lockAnimationController,
         curve: const Interval(0.8, 1.0, curve: Curves.easeInOut))));
 
-    Future.delayed(const Duration(milliseconds: 700),
-        () async => await lockAnimationController.forward());
+    lockAnimationController.addListener(() {
+      if (lockAnimationController.value > 0.4 &&
+          lockAnimationController.value <= 0.6 &&
+          !isLockSoundPlaying) {
+        isLockSoundPlaying = true;
+        soundPool.play(lockSoundId);
+      } else if (lockAnimationController.value > 0.0 &&
+          lockAnimationController.value <= 0.4 &&
+          !isDialSoundPlaying) {
+        isDialSoundPlaying = true;
+        soundPool.play(dialerSoundId);
+      } else if (lockAnimations[0].isCompleted ||
+          lockAnimations[0].isDismissed) {
+        isLockSoundPlaying = false;
+      } else if (lockAnimations[1].isCompleted ||
+          lockAnimations[1].isDismissed) {
+        isDialSoundPlaying = false;
+      }
+    });
+
+    Future.delayed(const Duration(milliseconds: 50), () async {
+      await loadSounds();
+      await Future.delayed(const Duration(milliseconds: 650));
+      await lockAnimationController.forward();
+    });
 
     super.initState();
+  }
+
+  Future loadSounds() async {
+    ByteData byteData = await rootBundle.load('assets/sounds/dialer.mp3');
+    dialerSoundId = await soundPool.load(byteData);
+
+    byteData = await rootBundle.load('assets/sounds/lock.mp3');
+    lockSoundId = await soundPool.load(byteData);
+
+    // await soundPool.play(textSoundId);
   }
 
   Future resetPasword() async {
