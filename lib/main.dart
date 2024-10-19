@@ -34,6 +34,7 @@ class MyApp extends StatelessWidget {
       child: const ScreenUtilInit(
         designSize: Size(392.72727272727275, 803.6363636363636),
         child: MaterialApp(
+          title: 'No Impostors',
           home: SplashScreen(),
         ),
       ),
